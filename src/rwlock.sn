@@ -1,0 +1,64 @@
+# ==============================================================================
+# sindarin-pkg-threads/rwlock.sn — Fair Reader-Writer Lock
+# ==============================================================================
+# Multiple readers may hold the lock concurrently. Writers get exclusive access.
+#
+# Fairness: when a writer arrives it blocks new readers, waits for existing
+# readers to finish, then runs. After the writer releases, all blocked readers
+# are woken before the next writer can acquire. This prevents writer starvation.
+#
+# Usage:
+#   var lock: ReaderWriteLock = ReaderWriteLock.new()
+#
+#   lock.withReadLock(fn(): void =>
+#       print(sharedData)
+#   )
+#
+#   lock.withWriteLock(fn(): void =>
+#       sharedData = "new value"
+#   )
+#
+#   lock.dispose()
+# ==============================================================================
+
+@source "rwlock.sn.c"
+
+@alias "RtReaderWriteLock"
+native struct ReaderWriteLock as ref =>
+    @alias "internal"
+    _internal: long
+
+    static fn new(): ReaderWriteLock =>
+        return sn_rwlock_new()
+
+    @alias "sn_rwlock_read_lock"
+    native fn readLock(): void
+
+    @alias "sn_rwlock_read_unlock"
+    native fn readUnlock(): void
+
+    @alias "sn_rwlock_write_lock"
+    native fn writeLock(): void
+
+    @alias "sn_rwlock_write_unlock"
+    native fn writeUnlock(): void
+
+    fn withReadLock(body: fn(): void): void =>
+        sn_rwlock_read_lock(self)
+        body()
+        sn_rwlock_read_unlock(self)
+
+    fn withWriteLock(body: fn(): void): void =>
+        sn_rwlock_write_lock(self)
+        body()
+        sn_rwlock_write_unlock(self)
+
+    @alias "sn_rwlock_dispose"
+    native fn dispose(): void
+
+native fn sn_rwlock_new(): ReaderWriteLock
+native fn sn_rwlock_read_lock(rw: ReaderWriteLock): void
+native fn sn_rwlock_read_unlock(rw: ReaderWriteLock): void
+native fn sn_rwlock_write_lock(rw: ReaderWriteLock): void
+native fn sn_rwlock_write_unlock(rw: ReaderWriteLock): void
+native fn sn_rwlock_dispose(rw: ReaderWriteLock): void

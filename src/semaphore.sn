@@ -1,0 +1,43 @@
+# ==============================================================================
+# sindarin-pkg-threads/semaphore.sn — Counting semaphore
+# ==============================================================================
+# Implemented with pthread_mutex_t + pthread_cond_t + int count for
+# portability (POSIX sem_init is deprecated on macOS).
+# ==============================================================================
+
+@source "semaphore.sn.c"
+
+@alias "RtSemaphore"
+native struct Semaphore as ref =>
+    @alias "internal"
+    _internal: long
+
+    static fn new(initial: int): Semaphore =>
+        return sn_semaphore_new(initial)
+
+    # Acquire one permit, blocking until one is available.
+    @alias "sn_semaphore_wait"
+    native fn wait(): void
+
+    # Release one permit, potentially unblocking a waiting thread.
+    @alias "sn_semaphore_post"
+    native fn post(): void
+
+    # Acquire one permit without blocking. Returns true if acquired.
+    @alias "sn_semaphore_try_wait"
+    native fn tryWait(): bool
+
+    # Acquire a permit, run body, then release the permit.
+    fn withPermit(body: fn(): void): void =>
+        sn_semaphore_wait(self)
+        body()
+        sn_semaphore_post(self)
+
+    @alias "sn_semaphore_dispose"
+    native fn dispose(): void
+
+native fn sn_semaphore_new(initial: int): Semaphore
+native fn sn_semaphore_wait(s: Semaphore): void
+native fn sn_semaphore_post(s: Semaphore): void
+native fn sn_semaphore_try_wait(s: Semaphore): bool
+native fn sn_semaphore_dispose(s: Semaphore): void

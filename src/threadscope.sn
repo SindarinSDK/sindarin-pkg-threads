@@ -1,0 +1,39 @@
+# ==============================================================================
+# sindarin-pkg-threads/threadscope.sn — Scoped thread spawning
+# ==============================================================================
+# ThreadScope.run() provides lifetime-safe thread spawning. All threads spawned
+# via scope.spawn() are automatically joined before run() returns, guaranteeing
+# that captured variables are alive for the entire duration of each thread.
+#
+# Usage:
+#   ThreadScope.run(fn(scope: ThreadScope): void =>
+#       var data: int[] = {1, 2, 3}
+#       scope.spawn(fn(): void =>
+#           print(data[0])   # safe — scope joins before data goes out of scope
+#       )
+#   )
+# ==============================================================================
+
+@source "threadscope.sn.c"
+
+@alias "RtThreadScope"
+native struct ThreadScope as ref =>
+    @alias "internal"
+    _internal: long
+
+    # Run body with a ThreadScope. All threads spawned inside body via
+    # scope.spawn() are joined before run() returns.
+    static fn run(body: fn(ThreadScope): void): void =>
+        sn_threadscope_run(body)
+
+    # Spawn a thread within this scope. The thread is joined when the
+    # enclosing ThreadScope.run() body returns.
+    @alias "sn_threadscope_spawn"
+    native fn spawn(task: fn(): void): void
+
+    @alias "sn_threadscope_dispose"
+    native fn dispose(): void
+
+native fn sn_threadscope_run(body: fn(ThreadScope): void): void
+native fn sn_threadscope_spawn(scope: ThreadScope, task: fn(): void): void
+native fn sn_threadscope_dispose(scope: ThreadScope): void

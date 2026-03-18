@@ -1,0 +1,59 @@
+import "../src/threadscope"
+
+sync var counter: int = 0
+sync var sum: int = 0
+
+fn main(): void =>
+    # Test 1: spawned threads complete before run() returns
+    counter = 0
+    ThreadScope.run(fn(scope: ThreadScope): void =>
+        scope.spawn(fn(): void =>
+            counter += 1
+        )
+        scope.spawn(fn(): void =>
+            counter += 1
+        )
+        scope.spawn(fn(): void =>
+            counter += 1
+        )
+    )
+
+    if counter != 3 =>
+        print($"FAIL: expected counter=3, got {counter}\n")
+        exit(1)
+
+    # Test 2: captures are safe — threads access shared array
+    var data: int[] = {10, 20, 30}
+
+    ThreadScope.run(fn(scope: ThreadScope): void =>
+        scope.spawn(fn(): void =>
+            sum += data[0]
+        )
+        scope.spawn(fn(): void =>
+            sum += data[1]
+        )
+        scope.spawn(fn(): void =>
+            sum += data[2]
+        )
+    )
+
+    if sum != 60 =>
+        print($"FAIL: expected sum=60, got {sum}\n")
+        exit(1)
+
+    # Test 3: many spawned threads
+    counter = 0
+    ThreadScope.run(fn(scope: ThreadScope): void =>
+        var i: int = 0
+        while i < 20 =>
+            scope.spawn(fn(): void =>
+                counter += 1
+            )
+            i += 1
+    )
+
+    if counter != 20 =>
+        print($"FAIL: expected counter=20, got {counter}\n")
+        exit(1)
+
+    print("PASS\n")

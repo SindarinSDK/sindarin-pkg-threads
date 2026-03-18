@@ -1,0 +1,56 @@
+import "../src/rwlock"
+
+sync var reads: int  = 0
+sync var writes: int = 0
+sync var value: int  = 0
+
+fn reader(rw: ReaderWriteLock): int =>
+    rw.withReadLock(fn(): void =>
+        reads += 1
+    )
+    return 1
+
+fn writer(rw: ReaderWriteLock): int =>
+    rw.withWriteLock(fn(): void =>
+        writes += 1
+    )
+    return 1
+
+fn increment(rw: ReaderWriteLock): int =>
+    rw.withWriteLock(fn(): void =>
+        value += 1
+    )
+    return 1
+
+fn main(): void =>
+    # Test 1: withReadLock allows concurrent readers
+    var rw: ReaderWriteLock = ReaderWriteLock.new()
+
+    var r1: int = &reader(rw)
+    var r2: int = &reader(rw)
+    var r3: int = &reader(rw)
+    var w1: int = &writer(rw)
+    var r4: int = &reader(rw)
+    [r1, r2, r3, w1, r4]!
+
+    if reads != 4 =>
+        print($"FAIL: expected reads=4, got {reads}\n")
+        exit(1)
+    if writes != 1 =>
+        print($"FAIL: expected writes=1, got {writes}\n")
+        exit(1)
+
+    # Test 2: multiple writers serialize correctly
+    var w2: int = &increment(rw)
+    var w3: int = &increment(rw)
+    var w4: int = &increment(rw)
+    var w5: int = &increment(rw)
+    var w6: int = &increment(rw)
+    [w2, w3, w4, w5, w6]!
+
+    if value != 5 =>
+        print($"FAIL: expected value=5, got {value}\n")
+        exit(1)
+
+    rw.dispose()
+    print("PASS\n")

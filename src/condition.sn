@@ -1,0 +1,73 @@
+# ==============================================================================
+# sindarin-pkg-threads/condition.sn — Condition variable
+# ==============================================================================
+# A condition variable lets threads sleep until a condition becomes true.
+# Always used together with a Mutex: the mutex protects the shared state
+# that the condition tests.
+#
+# Usage:
+#   var m: Mutex = Mutex.new()
+#   var cv: Condition = Condition.new()
+#
+#   # Waiter thread:
+#   m.lock()
+#   cv.waitUntil(m, fn() => bool => ready)
+#   m.unlock()
+#
+#   # Signaller thread:
+#   m.lock()
+#   ready = true
+#   cv.signal()
+#   m.unlock()
+# ==============================================================================
+
+@source "condition.sn.c"
+
+import "mutex"
+
+@alias "RtCondition"
+native struct Condition as ref =>
+    @alias "internal"
+    _internal: long
+
+    static fn new(): Condition =>
+        return sn_condition_new()
+
+    # Sleep until signal() or broadcast() wakes this thread.
+    # The mutex must be locked before calling; it is atomically released
+    # while sleeping and re-acquired before returning.
+    @alias "sn_condition_wait"
+    native fn wait(mutex: Mutex): void
+
+    # Like wait(), but returns false if ms milliseconds elapse without a signal.
+    @alias "sn_condition_timed_wait"
+    native fn timedWait(mutex: Mutex, ms: int): bool
+
+    # Wake one waiting thread.
+    @alias "sn_condition_signal"
+    native fn signal(): void
+
+    # Wake all waiting threads.
+    @alias "sn_condition_broadcast"
+    native fn broadcast(): void
+
+    # Block until predicate() returns true, re-checking after each wakeup.
+    # Eliminates the risk of using 'if' instead of 'while' for spurious wakeups.
+    fn waitUntil(mutex: Mutex, predicate: fn(): bool): void =>
+        while !predicate() =>
+            sn_condition_wait(self, mutex)
+
+    # Like waitUntil(), but returns false if the total wait exceeds ms milliseconds.
+    @alias "sn_condition_timed_wait_until"
+    native fn timedWaitUntil(mutex: Mutex, ms: int, predicate: fn(): bool): bool
+
+    @alias "sn_condition_dispose"
+    native fn dispose(): void
+
+native fn sn_condition_new(): Condition
+native fn sn_condition_wait(cv: Condition, mutex: Mutex): void
+native fn sn_condition_timed_wait(cv: Condition, mutex: Mutex, ms: int): bool
+native fn sn_condition_signal(cv: Condition): void
+native fn sn_condition_broadcast(cv: Condition): void
+native fn sn_condition_timed_wait_until(cv: Condition, mutex: Mutex, ms: int, predicate: fn(): bool): bool
+native fn sn_condition_dispose(cv: Condition): void

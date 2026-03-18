@@ -1,0 +1,49 @@
+import "../src/mutex"
+
+sync var counter: int = 0
+
+fn incr(m: Mutex): int =>
+    m.withLock(fn(): void =>
+        counter += 1
+    )
+    return 1
+
+fn main(): void =>
+    # Test 1: basic lock / unlock
+    var m: Mutex = Mutex.new()
+    m.lock()
+    m.unlock()
+
+    # Test 2: withLock serialises concurrent increments
+    var t1: int = &incr(m)
+    var t2: int = &incr(m)
+    var t3: int = &incr(m)
+    var t4: int = &incr(m)
+    var t5: int = &incr(m)
+    [t1, t2, t3, t4, t5]!
+
+    if counter != 5 =>
+        print($"FAIL: expected counter=5, got {counter}\n")
+        exit(1)
+
+    # Test 3: tryWithLock returns false when already locked
+    m.lock()
+    var acquired: bool as ref = false
+    m.tryWithLock(fn(): void =>
+        acquired = true
+    )
+    if acquired =>
+        print("FAIL: tryWithLock should not acquire a held lock\n")
+        exit(1)
+    m.unlock()
+
+    # Test 4: tryWithLock returns true when lock is free
+    m.tryWithLock(fn(): void =>
+        acquired = true
+    )
+    if !acquired =>
+        print("FAIL: tryWithLock should acquire a free lock\n")
+        exit(1)
+
+    m.dispose()
+    print("PASS\n")

@@ -1,0 +1,63 @@
+import "../src/semaphore"
+
+sync var sem_done: int = 0
+
+fn sem_worker(sem2: Semaphore): int =>
+    sem2.wait()
+    sem_done += 1
+    return 1
+
+fn main(): void =>
+    # Test 1: new semaphore with initial count 2 allows two waits without blocking
+    var sem: Semaphore = Semaphore.new(2)
+    sem.wait()
+    sem.wait()
+
+    # Count is now 0 — tryWait should fail
+    var acquired: bool = sem.tryWait()
+    if acquired =>
+        print("FAIL: tryWait should return false when count is 0\n")
+        exit(1)
+
+    # Release one — tryWait should now succeed
+    sem.post()
+    acquired = sem.tryWait()
+    if !acquired =>
+        print("FAIL: tryWait should return true after post()\n")
+        exit(1)
+
+    # Test 2: withPermit acquires and releases around body
+    sem.post()
+    sem.post()
+    sync var ran: int = 0
+    sem.withPermit(fn(): void =>
+        ran += 1
+    )
+    if ran != 1 =>
+        print($"FAIL: expected ran=1, got {ran}\n")
+        exit(1)
+
+    # Test 3: concurrent throughput — 5 workers each acquire once
+    var sem2: Semaphore = Semaphore.new(0)
+
+    var t1: int = &sem_worker(sem2)
+    var t2: int = &sem_worker(sem2)
+    var t3: int = &sem_worker(sem2)
+    var t4: int = &sem_worker(sem2)
+    var t5: int = &sem_worker(sem2)
+
+    sem2.post()
+    sem2.post()
+    sem2.post()
+    sem2.post()
+    sem2.post()
+
+    [t1, t2, t3, t4, t5]!
+
+    if sem_done != 5 =>
+        print($"FAIL: expected done=5, got {sem_done}\n")
+        exit(1)
+
+    sem.dispose()
+    sem2.dispose()
+    print("PASS\n")

@@ -1,0 +1,49 @@
+# ==============================================================================
+# sindarin-pkg-threads/threadpool.sn — Thread pool
+# ==============================================================================
+# A fixed pool of worker threads that execute submitted tasks concurrently.
+# Works well with WaitGroup to track completion of batches of work.
+#
+# Usage:
+#   using pool = ThreadPool.new(4) =>
+#       var wg: WaitGroup = WaitGroup.new()
+#       for item in items =>
+#           wg.add(1)
+#           pool.submit(fn(): void =>
+#               process(item)
+#               wg.done()
+#           )
+#       wg.wait()
+#       wg.dispose()
+#   # pool.dispose() drains the queue and joins all workers automatically
+# ==============================================================================
+
+@source "threadpool.sn.c"
+
+@alias "RtThreadPool"
+native struct ThreadPool as ref =>
+    @alias "internal"
+    _internal: long
+
+    static fn new(workers: int): ThreadPool =>
+        return sn_threadpool_new(workers)
+
+    # Submit a task for execution by a worker thread.
+    # The closure is shallow-copied; captured objects are shared with the caller.
+    # The caller must ensure captured data remains alive until the task runs.
+    @alias "sn_threadpool_submit"
+    native fn submit(task: fn(): void): void
+
+    # Drain the work queue and wait for all in-progress tasks to finish,
+    # then stop all worker threads. Safe to call before dispose().
+    @alias "sn_threadpool_shutdown"
+    native fn shutdown(): void
+
+    # shutdown() then free all resources. Called automatically by using =>.
+    @alias "sn_threadpool_dispose"
+    native fn dispose(): void
+
+native fn sn_threadpool_new(workers: int): ThreadPool
+native fn sn_threadpool_submit(pool: ThreadPool, task: fn(): void): void
+native fn sn_threadpool_shutdown(pool: ThreadPool): void
+native fn sn_threadpool_dispose(pool: ThreadPool): void
