@@ -4,7 +4,8 @@ sync var sem_done: int = 0
 
 fn sem_worker(sem2: Semaphore): int =>
     sem2.wait()
-    sem_done += 1
+    lock(sem_done) =>
+        sem_done += 1
     return 1
 
 fn main(): void =>
