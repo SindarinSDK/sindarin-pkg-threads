@@ -11,14 +11,14 @@
 
 #include "threads_internal.h"
 
-typedef __sn__ReaderWriteLock RtReaderWriteLock;
+typedef __sn__ReaderWriterLock RtReaderWriterLock;
 
-RtReaderWriteLock *sn_rwlock_new(void)
+RtReaderWriterLock *sn_rwlock_new(void)
 {
-    RtReaderWriteLock *lock = (RtReaderWriteLock *)calloc(1, sizeof(RtReaderWriteLock));
+    RtReaderWriterLock *lock = (RtReaderWriterLock *)calloc(1, sizeof(RtReaderWriterLock));
     if (!lock) { fprintf(stderr, "sn_rwlock_new: out of memory\n"); exit(1); }
 
-    ReaderWriteLockInternal *internal = (ReaderWriteLockInternal *)calloc(1, sizeof(ReaderWriteLockInternal));
+    ReaderWriterLockInternal *internal = (ReaderWriterLockInternal *)calloc(1, sizeof(ReaderWriterLockInternal));
     if (!internal) { fprintf(stderr, "sn_rwlock_new: out of memory\n"); exit(1); }
 
     pthread_mutex_init(&internal->mutex,        NULL);
@@ -32,9 +32,9 @@ RtReaderWriteLock *sn_rwlock_new(void)
     return lock;
 }
 
-void sn_rwlock_read_lock(RtReaderWriteLock *self)
+void sn_rwlock_read_lock(RtReaderWriterLock *self)
 {
-    ReaderWriteLockInternal *rw = (ReaderWriteLockInternal *)(uintptr_t)self->internal;
+    ReaderWriterLockInternal *rw = (ReaderWriterLockInternal *)(uintptr_t)self->internal;
     pthread_mutex_lock(&rw->mutex);
     rw->reader_count++;
     if (rw->reader_count <= 0)
@@ -43,9 +43,9 @@ void sn_rwlock_read_lock(RtReaderWriteLock *self)
     pthread_mutex_unlock(&rw->mutex);
 }
 
-void sn_rwlock_read_unlock(RtReaderWriteLock *self)
+void sn_rwlock_read_unlock(RtReaderWriterLock *self)
 {
-    ReaderWriteLockInternal *rw = (ReaderWriteLockInternal *)(uintptr_t)self->internal;
+    ReaderWriterLockInternal *rw = (ReaderWriterLockInternal *)(uintptr_t)self->internal;
     pthread_mutex_lock(&rw->mutex);
     rw->reader_count--;
     if (rw->reader_count < 0) {
@@ -57,9 +57,9 @@ void sn_rwlock_read_unlock(RtReaderWriteLock *self)
     pthread_mutex_unlock(&rw->mutex);
 }
 
-void sn_rwlock_write_lock(RtReaderWriteLock *self)
+void sn_rwlock_write_lock(RtReaderWriterLock *self)
 {
-    ReaderWriteLockInternal *rw = (ReaderWriteLockInternal *)(uintptr_t)self->internal;
+    ReaderWriterLockInternal *rw = (ReaderWriterLockInternal *)(uintptr_t)self->internal;
     pthread_mutex_lock(&rw->writer_mutex);
 
     pthread_mutex_lock(&rw->mutex);
@@ -71,9 +71,9 @@ void sn_rwlock_write_lock(RtReaderWriteLock *self)
     pthread_mutex_unlock(&rw->mutex);
 }
 
-void sn_rwlock_write_unlock(RtReaderWriteLock *self)
+void sn_rwlock_write_unlock(RtReaderWriterLock *self)
 {
-    ReaderWriteLockInternal *rw = (ReaderWriteLockInternal *)(uintptr_t)self->internal;
+    ReaderWriterLockInternal *rw = (ReaderWriterLockInternal *)(uintptr_t)self->internal;
     pthread_mutex_lock(&rw->mutex);
     rw->reader_count += SN_RW_MAX_READERS; /* restore to positive */
     int blocked = rw->reader_count;
@@ -84,10 +84,10 @@ void sn_rwlock_write_unlock(RtReaderWriteLock *self)
     pthread_mutex_unlock(&rw->writer_mutex);
 }
 
-void sn_rwlock_dispose(RtReaderWriteLock *self)
+void sn_rwlock_dispose(RtReaderWriterLock *self)
 {
     if (!self->internal) return;
-    ReaderWriteLockInternal *rw = (ReaderWriteLockInternal *)(uintptr_t)self->internal;
+    ReaderWriterLockInternal *rw = (ReaderWriterLockInternal *)(uintptr_t)self->internal;
     pthread_mutex_destroy(&rw->mutex);
     pthread_cond_destroy (&rw->writer_cond);
     pthread_cond_destroy (&rw->reader_cond);

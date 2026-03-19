@@ -47,7 +47,7 @@ typedef struct {
     int             reader_count; /* positive = active readers, negative = writer pending */
     int             reader_wait;  /* readers the current writer is waiting for */
     pthread_mutex_t writer_mutex; /* serializes writers */
-} ReaderWriteLockInternal;
+} ReaderWriterLockInternal;
 
 typedef struct {
     pthread_mutex_t mutex;

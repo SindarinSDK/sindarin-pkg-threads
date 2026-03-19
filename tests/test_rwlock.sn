@@ -4,19 +4,19 @@ sync var reads: int  = 0
 sync var writes: int = 0
 sync var value: int  = 0
 
-fn reader(rw: ReaderWriteLock): int =>
+fn reader(rw: ReaderWriterLock): int =>
     rw.withReadLock(fn(): void =>
         reads += 1
     )
     return 1
 
-fn writer(rw: ReaderWriteLock): int =>
+fn writer(rw: ReaderWriterLock): int =>
     rw.withWriteLock(fn(): void =>
         writes += 1
     )
     return 1
 
-fn increment(rw: ReaderWriteLock): int =>
+fn increment(rw: ReaderWriterLock): int =>
     rw.withWriteLock(fn(): void =>
         value += 1
     )
@@ -24,7 +24,7 @@ fn increment(rw: ReaderWriteLock): int =>
 
 fn main(): void =>
     # Test 1: withReadLock allows concurrent readers
-    var rw: ReaderWriteLock = ReaderWriteLock.new()
+    var rw: ReaderWriterLock = ReaderWriterLock.new()
 
     var r1: int = &reader(rw)
     var r2: int = &reader(rw)

@@ -48,7 +48,7 @@ fn main(): void =>
 | [Mutex](#mutex) | `import "sindarin-pkg-threads/src/mutex"` | Mutual exclusion lock |
 | [Semaphore](#semaphore) | `import "sindarin-pkg-threads/src/semaphore"` | Counting semaphore |
 | [Condition](#condition-variable) | `import "sindarin-pkg-threads/src/condition"` | Condition variable |
-| [ReaderWriteLock](#readerwritelock) | `import "sindarin-pkg-threads/src/rwlock"` | Fair reader-writer lock |
+| [ReaderWriterLock](#readerwritelock) | `import "sindarin-pkg-threads/src/rwlock"` | Fair reader-writer lock |
 | [WaitGroup](#waitgroup) | `import "sindarin-pkg-threads/src/waitgroup"` | Wait for a set of threads to finish |
 | [ThreadScope](#threadscope) | `import "sindarin-pkg-threads/src/threadscope"` | Lifetime-safe scoped threads |
 | [ThreadPool](#threadpool) | `import "sindarin-pkg-threads/src/threadpool"` | Fixed pool of worker threads |
@@ -168,7 +168,7 @@ cv.dispose()
 
 ---
 
-## ReaderWriteLock
+## ReaderWriterLock
 
 ```sindarin
 import "sindarin-pkg-threads/src/rwlock"
@@ -178,7 +178,7 @@ A fair reader-writer lock. Multiple readers may hold the lock concurrently; writ
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `new` | `static fn new(): ReaderWriteLock` | Create a new lock |
+| `new` | `static fn new(): ReaderWriterLock` | Create a new lock |
 | `readLock` | `fn readLock(): void` | Acquire a shared read lock |
 | `readUnlock` | `fn readUnlock(): void` | Release a shared read lock |
 | `writeLock` | `fn writeLock(): void` | Acquire an exclusive write lock |
@@ -188,7 +188,7 @@ A fair reader-writer lock. Multiple readers may hold the lock concurrently; writ
 | `dispose` | `fn dispose(): void` | Free resources |
 
 ```sindarin
-var rw: ReaderWriteLock = ReaderWriteLock.new()
+var rw: ReaderWriterLock = ReaderWriterLock.new()
 
 fn readValue(): int =>
     rw.withReadLock(fn(): void =>
