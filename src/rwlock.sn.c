@@ -15,8 +15,7 @@ typedef __sn__ReaderWriterLock RtReaderWriterLock;
 
 RtReaderWriterLock *sn_rwlock_new(void)
 {
-    RtReaderWriterLock *lock = (RtReaderWriterLock *)calloc(1, sizeof(RtReaderWriterLock));
-    if (!lock) { fprintf(stderr, "sn_rwlock_new: out of memory\n"); exit(1); }
+    RtReaderWriterLock *lock = __sn__ReaderWriterLock__new();
 
     ReaderWriterLockInternal *internal = (ReaderWriterLockInternal *)calloc(1, sizeof(ReaderWriterLockInternal));
     if (!internal) { fprintf(stderr, "sn_rwlock_new: out of memory\n"); exit(1); }

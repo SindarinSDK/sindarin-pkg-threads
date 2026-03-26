@@ -6,8 +6,7 @@ typedef __sn__Semaphore RtSemaphore;
 
 RtSemaphore *sn_semaphore_new(long long initial)
 {
-    RtSemaphore *s = (RtSemaphore *)calloc(1, sizeof(RtSemaphore));
-    if (!s) { fprintf(stderr, "sn_semaphore_new: out of memory\n"); exit(1); }
+    RtSemaphore *s = __sn__Semaphore__new();
 
     SemaphoreInternal *internal = (SemaphoreInternal *)calloc(1, sizeof(SemaphoreInternal));
     if (!internal) { fprintf(stderr, "sn_semaphore_new: out of memory\n"); exit(1); }

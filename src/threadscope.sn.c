@@ -18,8 +18,7 @@ static void *threadscope_runner(void *arg)
 
 static RtThreadScope *threadscope_new(void)
 {
-    RtThreadScope *scope = (RtThreadScope *)calloc(1, sizeof(RtThreadScope));
-    if (!scope) { fprintf(stderr, "threadscope_new: out of memory\n"); exit(1); }
+    RtThreadScope *scope = __sn__ThreadScope__new();
 
     ThreadScopeInternal *internal = (ThreadScopeInternal *)calloc(1, sizeof(ThreadScopeInternal));
     if (!internal) { fprintf(stderr, "threadscope_new: out of memory\n"); exit(1); }

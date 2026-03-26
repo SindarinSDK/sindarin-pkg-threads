@@ -14,8 +14,7 @@ static inline pthread_mutex_t *get_mutex_pthread(RtMutex *mutex)
 
 RtCondition *sn_condition_new(void)
 {
-    RtCondition *cv = (RtCondition *)calloc(1, sizeof(RtCondition));
-    if (!cv) { fprintf(stderr, "sn_condition_new: out of memory\n"); exit(1); }
+    RtCondition *cv = __sn__Condition__new();
 
     ConditionInternal *internal = (ConditionInternal *)calloc(1, sizeof(ConditionInternal));
     if (!internal) { fprintf(stderr, "sn_condition_new: out of memory\n"); exit(1); }

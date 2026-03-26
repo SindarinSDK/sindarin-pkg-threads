@@ -6,8 +6,7 @@ typedef __sn__WaitGroup RtWaitGroup;
 
 RtWaitGroup *sn_waitgroup_new(void)
 {
-    RtWaitGroup *wg = (RtWaitGroup *)calloc(1, sizeof(RtWaitGroup));
-    if (!wg) { fprintf(stderr, "sn_waitgroup_new: out of memory\n"); exit(1); }
+    RtWaitGroup *wg = __sn__WaitGroup__new();
 
     WaitGroupInternal *internal = (WaitGroupInternal *)calloc(1, sizeof(WaitGroupInternal));
     if (!internal) { fprintf(stderr, "sn_waitgroup_new: out of memory\n"); exit(1); }

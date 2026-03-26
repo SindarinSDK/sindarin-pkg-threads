@@ -49,8 +49,7 @@ static void *threadpool_worker(void *arg)
 
 RtThreadPool *sn_threadpool_new(long long workers)
 {
-    RtThreadPool *tp = (RtThreadPool *)calloc(1, sizeof(RtThreadPool));
-    if (!tp) { fprintf(stderr, "sn_threadpool_new: out of memory\n"); exit(1); }
+    RtThreadPool *tp = __sn__ThreadPool__new();
 
     ThreadPoolInternal *pool = (ThreadPoolInternal *)calloc(1, sizeof(ThreadPoolInternal));
     if (!pool) { fprintf(stderr, "sn_threadpool_new: out of memory\n"); exit(1); }

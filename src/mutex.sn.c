@@ -6,8 +6,7 @@ typedef __sn__Mutex RtMutex;
 
 RtMutex *sn_mutex_new(void)
 {
-    RtMutex *m = (RtMutex *)calloc(1, sizeof(RtMutex));
-    if (!m) { fprintf(stderr, "sn_mutex_new: out of memory\n"); exit(1); }
+    RtMutex *m = __sn__Mutex__new();
 
     MutexInternal *internal = (MutexInternal *)calloc(1, sizeof(MutexInternal));
     if (!internal) { fprintf(stderr, "sn_mutex_new: out of memory\n"); exit(1); }
