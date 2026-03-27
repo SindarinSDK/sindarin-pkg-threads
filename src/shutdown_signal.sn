@@ -1,0 +1,44 @@
+# ==============================================================================
+# sindarin-pkg-threads/shutdown_signal.sn — Cancellation signal
+# ==============================================================================
+# A thread-safe signal for waking blocked I/O operations (e.g. accept()).
+# Uses the self-pipe trick: signal() writes to an internal pipe, waking any
+# select()/poll() that includes fd().
+#
+# Usage:
+#   var sig: ShutdownSignal = ShutdownSignal.new()
+#
+#   # In accept loop (pass fd to listener):
+#   var client: TcpStream = listener.acceptOrShutdown(sig.fd())
+#   if !client.isValid() =>
+#       break  # shutdown was signalled
+#
+#   # From another thread:
+#   sig.signal()  # wakes the blocked accept
+# ==============================================================================
+
+@source "shutdown_signal.sn.c"
+
+@alias "RtShutdownSignal"
+native struct ShutdownSignal as ref =>
+    @alias "internal"
+    _internal: long
+
+    static fn new(): ShutdownSignal =>
+        return sn_shutdown_signal_new()
+
+    # Signal shutdown — wakes any select() waiting on fd(). Thread-safe and idempotent.
+    @alias "sn_shutdown_signal_signal"
+    native fn signal(): void
+
+    # Get the file descriptor for use with acceptOrShutdown().
+    @alias "sn_shutdown_signal_fd"
+    native fn fd(): int
+
+    @alias "sn_shutdown_signal_dispose"
+    native fn dispose(): void
+
+native fn sn_shutdown_signal_new(): ShutdownSignal
+native fn sn_shutdown_signal_signal(sig: ShutdownSignal): void
+native fn sn_shutdown_signal_fd(sig: ShutdownSignal): int
+native fn sn_shutdown_signal_dispose(sig: ShutdownSignal): void

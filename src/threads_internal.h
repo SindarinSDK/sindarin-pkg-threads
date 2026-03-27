@@ -74,6 +74,17 @@ typedef struct {
     pthread_t       *workers;
 } ThreadPoolInternal;
 
+/* ---- Shutdown signal (self-pipe trick) ---- */
+
+typedef struct {
+#ifdef _WIN32
+    long long pipe_fd[2];   /* loopback socket pair on Windows */
+#else
+    int       pipe_fd[2];   /* pipe(2) read/write fds */
+#endif
+    int       signalled;    /* atomic flag — 0 or 1 */
+} ShutdownSignalInternal;
+
 /* ---- Thread scope spawned-thread list ---- */
 
 typedef struct SpawnedThread {
