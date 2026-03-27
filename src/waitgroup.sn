@@ -6,43 +6,43 @@
 # and wait() to block until the counter reaches zero.
 #
 # Usage:
-#   var wg: WaitGroup = WaitGroup.new()
+# var wg: WaitGroup = WaitGroup.new()
 #
-#   wg.add(3)
-#   &worker(wg)
-#   &worker(wg)
-#   &worker(wg)
-#   wg.wait()
+# wg.add(3)
+# &worker(wg)
+# &worker(wg)
+# &worker(wg)
+# wg.wait()
 #
-#   fn worker(wg: WaitGroup): void =>
-#       # ... do work ...
-#       wg.done()
+# fn worker(wg: WaitGroup): void =>
+# # ... do work ...
+# wg.done()
 # ==============================================================================
 
 @source "waitgroup.sn.c"
 
 @alias "RtWaitGroup"
 native struct WaitGroup as ref =>
-    @alias "internal"
-    _internal: long
+  @alias "internal"
+  _internal: long
 
-    static fn new(): WaitGroup =>
-        return sn_waitgroup_new()
+  static fn new(): WaitGroup =>
+    return sn_waitgroup_new()
 
-    # Increment the counter by n. Must be called before the goroutines start.
-    @alias "sn_waitgroup_add"
-    native fn add(n: int): void
+  # Increment the counter by n. Must be called before the goroutines start.
+  @alias "sn_waitgroup_add"
+  native fn add(n: int): void
 
-    # Decrement the counter by one. Wakes wait() if the counter reaches zero.
-    @alias "sn_waitgroup_done"
-    native fn done(): void
+  # Decrement the counter by one. Wakes wait() if the counter reaches zero.
+  @alias "sn_waitgroup_done"
+  native fn done(): void
 
-    # Block until the counter is zero.
-    @alias "sn_waitgroup_wait"
-    native fn wait(): void
+  # Block until the counter is zero.
+  @alias "sn_waitgroup_wait"
+  native fn wait(): void
 
-    @alias "sn_waitgroup_dispose"
-    native fn dispose(): void
+  @alias "sn_waitgroup_dispose"
+  native fn dispose(): void
 
 native fn sn_waitgroup_new(): WaitGroup
 native fn sn_waitgroup_add(wg: WaitGroup, n: int): void

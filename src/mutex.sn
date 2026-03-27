@@ -6,38 +6,38 @@
 
 @alias "RtMutex"
 native struct Mutex as ref =>
-    @alias "internal"
-    _internal: long
+  @alias "internal"
+  _internal: long
 
-    static fn new(): Mutex =>
-        return sn_mutex_new()
+  static fn new(): Mutex =>
+    return sn_mutex_new()
 
-    @alias "sn_mutex_lock"
-    native fn lock(): void
+  @alias "sn_mutex_lock"
+  native fn lock (): void
 
-    @alias "sn_mutex_unlock"
-    native fn unlock(): void
+  @alias "sn_mutex_unlock"
+  native fn unlock(): void
 
-    @alias "sn_mutex_try_lock"
-    native fn tryLock(): bool
+  @alias "sn_mutex_try_lock"
+  native fn tryLock(): bool
 
-    # Acquire the lock, run body, then release. Always releases even if body panics.
-    fn withLock(body: fn(): void): void =>
-        sn_mutex_lock(self)
-        body()
-        sn_mutex_unlock(self)
+  # Acquire the lock, run body, then release. Always releases even if body panics.
+  fn withLock(body: fn(): void): void =>
+    sn_mutex_lock(self)
+    body()
+    sn_mutex_unlock(self)
 
-    # Acquire the lock only if available. Runs body and returns true if acquired,
-    # returns false immediately without blocking if the lock is held.
-    fn tryWithLock(body: fn(): void): bool =>
-        if sn_mutex_try_lock(self) =>
-            body()
-            sn_mutex_unlock(self)
-            return true
-        return false
+  # Acquire the lock only if available. Runs body and returns true if acquired,
+  # returns false immediately without blocking if the lock is held.
+  fn tryWithLock(body: fn(): void): bool =>
+    if sn_mutex_try_lock(self) =>
+      body()
+      sn_mutex_unlock(self)
+      return true
+    return false
 
-    @alias "sn_mutex_dispose"
-    native fn dispose(): void
+  @alias "sn_mutex_dispose"
+  native fn dispose(): void
 
 native fn sn_mutex_new(): Mutex
 native fn sn_mutex_lock(m: Mutex): void

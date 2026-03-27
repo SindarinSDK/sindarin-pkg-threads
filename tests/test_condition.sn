@@ -5,63 +5,63 @@ sync var ready: int = 0
 sync var woken: int = 0
 
 fn waiter(m: Mutex, cv: Condition): int =>
-    m.lock()
-    cv.waitUntil(m, fn(): bool => ready == 1)
-    m.unlock()
-    return 1
+  m.lock ()
+  cv.waitUntil(m, fn(): bool => ready == 1)
+  m.unlock()
+  return 1
 
 fn waiter2(m: Mutex, cv: Condition): int =>
-    m.lock()
-    cv.waitUntil(m, fn(): bool => ready == 2)
-    woken += 1
-    m.unlock()
-    return 1
+  m.lock ()
+  cv.waitUntil(m, fn(): bool => ready == 2)
+  woken += 1
+  m.unlock()
+  return 1
 
 fn main(): void =>
-    # Test 1: signal wakes a waiting thread
-    var m: Mutex = Mutex.new()
-    var cv: Condition = Condition.new()
+  # Test 1: signal wakes a waiting thread
+  var m: Mutex = Mutex.new()
+  var cv: Condition = Condition.new()
 
-    var t: int = &waiter(m, cv)
+  var t: int = & waiter(m, cv)
 
-    m.lock()
-    ready = 1
-    cv.signal()
-    m.unlock()
+  m.lock ()
+  ready = 1
+  cv.signal()
+  m.unlock()
 
-    t!
+  t !
 
-    if ready != 1 =>
-        print("FAIL: ready should be 1 after signal\n")
-        exit(1)
+  if ready != 1 =>
+    print("FAIL: ready should be 1 after signal\n")
+    exit(1)
 
-    # Test 2: broadcast wakes multiple waiters
-    ready = 0
+  # Test 2: broadcast wakes multiple waiters
+  ready = 0
 
-    var t1: int = &waiter2(m, cv)
-    var t2: int = &waiter2(m, cv)
-    var t3: int = &waiter2(m, cv)
+  var t1: int = & waiter2(m, cv)
+  var t2: int = & waiter2(m, cv)
+  var t3: int = & waiter2(m, cv)
 
-    m.lock()
-    ready = 2
-    cv.broadcast()
-    m.unlock()
+  m.lock ()
+  ready = 2
+  cv.broadcast()
+  m.unlock()
 
-    [t1, t2, t3]!
+  [t1, t2, t3] !
 
-    if woken != 3 =>
-        print($"FAIL: expected woken=3, got {woken}\n")
-        exit(1)
+  if woken != 3 =>
+    print($"FAIL: expected woken=3, got {woken}\n")
+    exit(1)
 
-    # Test 3: timedWait returns false on timeout
-    m.lock()
-    var signalled: bool = cv.timedWait(m, 50)
-    m.unlock()
+  # Test 3: timedWait returns false on timeout
+  m.lock ()
+  var signalled: bool = cv.timedWait(m, 50)
+  m.unlock()
 
-    if signalled =>
-        print("FAIL: timedWait should return false when no signal arrives\n")
-        exit(1)
+  if signalled =>
+    print("FAIL: timedWait should return false when no signal arrives\n")
+    exit(1)
 
-    m.dispose()
-    cv.dispose()
-    print("PASS\n")
+  m.dispose()
+  cv.dispose()
+  print("PASS\n")

@@ -3,45 +3,45 @@ import "../src/shutdown_signal"
 sync var worker_result: int = 0
 
 fn blocking_worker(sig: ShutdownSignal): int =>
-    # Simulate waiting on the signal fd using a short spin
-    # (can't call select() from Sindarin, but we can test signal + fd + dispose)
-    var fd: int = sig.fd()
-    if fd < 0 =>
-        lock(worker_result) =>
-            worker_result = -1
-        return 1
-    # Wait briefly then check if signalled
-    sig.signal()
-    lock(worker_result) =>
-        worker_result = 1
+  # Simulate waiting on the signal fd using a short spin
+  # (can't call select() from Sindarin, but we can test signal + fd + dispose)
+  var fd: int = sig.fd()
+  if fd < 0 =>
+    lock (worker_result) =>
+      worker_result = -1
     return 1
+  # Wait briefly then check if signalled
+  sig.signal()
+  lock (worker_result) =>
+    worker_result = 1
+  return 1
 
 fn main(): void =>
-    # Test 1: Basic create and fd
-    var sig: ShutdownSignal = ShutdownSignal.new()
-    var fd: int = sig.fd()
-    if fd < 0 =>
-        print("FAIL: fd() should return a non-negative file descriptor\n")
-        exit(1)
-    print("test_shutdown_signal_create: PASS\n")
+  # Test 1: Basic create and fd
+  var sig: ShutdownSignal = ShutdownSignal.new()
+  var fd: int = sig.fd()
+  if fd < 0 =>
+    print("FAIL: fd() should return a non-negative file descriptor\n")
+    exit(1)
+  print("test_shutdown_signal_create: PASS\n")
 
-    # Test 2: Signal is idempotent (calling twice doesn't crash)
-    sig.signal()
-    sig.signal()
-    print("test_shutdown_signal_idempotent: PASS\n")
+  # Test 2: Signal is idempotent (calling twice doesn't crash)
+  sig.signal()
+  sig.signal()
+  print("test_shutdown_signal_idempotent: PASS\n")
 
-    # Test 3: Dispose
-    sig.dispose()
-    print("test_shutdown_signal_dispose: PASS\n")
+  # Test 3: Dispose
+  sig.dispose()
+  print("test_shutdown_signal_dispose: PASS\n")
 
-    # Test 4: Signal from another thread
-    var sig2: ShutdownSignal = ShutdownSignal.new()
-    var t: int = &blocking_worker(sig2)
-    [t]!
-    if worker_result != 1 =>
-        print($"FAIL: expected worker_result=1, got {worker_result}\n")
-        exit(1)
-    sig2.dispose()
-    print("test_shutdown_signal_thread: PASS\n")
+  # Test 4: Signal from another thread
+  var sig2: ShutdownSignal = ShutdownSignal.new()
+  var t: int = & blocking_worker(sig2)
+  [t] !
+  if worker_result != 1 =>
+    print($"FAIL: expected worker_result=1, got {worker_result}\n")
+    exit(1)
+  sig2.dispose()
+  print("test_shutdown_signal_thread: PASS\n")
 
-    print("PASS\n")
+  print("PASS\n")

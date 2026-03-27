@@ -1,44 +1,44 @@
 import "../src/waitgroup"
 
 sync var wg_counter: int = 0
-sync var wg_total: int   = 0
+sync var wg_total: int = 0
 
 fn wg_worker(wg: WaitGroup): void =>
-    lock(wg_counter) =>
-        wg_counter += 1
-    wg.done()
+  lock (wg_counter) =>
+    wg_counter += 1
+  wg.done()
 
 fn wg_batch(wg: WaitGroup, n: int): void =>
-    lock(wg_total) =>
-        wg_total += n
-    wg.done()
+  lock (wg_total) =>
+    wg_total += n
+  wg.done()
 
 fn main(): void =>
-    # Test 1: wait() blocks until all done() calls are made
-    var wg: WaitGroup = WaitGroup.new()
+  # Test 1: wait() blocks until all done() calls are made
+  var wg: WaitGroup = WaitGroup.new()
 
-    wg.add(5)
-    &wg_worker(wg)
-    &wg_worker(wg)
-    &wg_worker(wg)
-    &wg_worker(wg)
-    &wg_worker(wg)
-    wg.wait()
+  wg.add(5)
+  & wg_worker(wg)
+  & wg_worker(wg)
+  & wg_worker(wg)
+  & wg_worker(wg)
+  & wg_worker(wg)
+  wg.wait()
 
-    if wg_counter != 5 =>
-        print($"FAIL: expected counter=5, got {wg_counter}\n")
-        exit(1)
+  if wg_counter != 5 =>
+    print($"FAIL: expected counter=5, got {wg_counter}\n")
+    exit(1)
 
-    # Test 2: add() can be called multiple times before done()
-    wg.add(3)
-    &wg_batch(wg, 10)
-    &wg_batch(wg, 20)
-    &wg_batch(wg, 30)
-    wg.wait()
+  # Test 2: add() can be called multiple times before done()
+  wg.add(3)
+  & wg_batch(wg, 10)
+  & wg_batch(wg, 20)
+  & wg_batch(wg, 30)
+  wg.wait()
 
-    if wg_total != 60 =>
-        print($"FAIL: expected total=60, got {wg_total}\n")
-        exit(1)
+  if wg_total != 60 =>
+    print($"FAIL: expected total=60, got {wg_total}\n")
+    exit(1)
 
-    wg.dispose()
-    print("PASS\n")
+  wg.dispose()
+  print("PASS\n")

@@ -9,32 +9,32 @@
 
 @alias "RtSemaphore"
 native struct Semaphore as ref =>
-    @alias "internal"
-    _internal: long
+  @alias "internal"
+  _internal: long
 
-    static fn new(initial: int): Semaphore =>
-        return sn_semaphore_new(initial)
+  static fn new(initial: int): Semaphore =>
+    return sn_semaphore_new(initial)
 
-    # Acquire one permit, blocking until one is available.
-    @alias "sn_semaphore_wait"
-    native fn wait(): void
+  # Acquire one permit, blocking until one is available.
+  @alias "sn_semaphore_wait"
+  native fn wait(): void
 
-    # Release one permit, potentially unblocking a waiting thread.
-    @alias "sn_semaphore_post"
-    native fn post(): void
+  # Release one permit, potentially unblocking a waiting thread.
+  @alias "sn_semaphore_post"
+  native fn post(): void
 
-    # Acquire one permit without blocking. Returns true if acquired.
-    @alias "sn_semaphore_try_wait"
-    native fn tryWait(): bool
+  # Acquire one permit without blocking. Returns true if acquired.
+  @alias "sn_semaphore_try_wait"
+  native fn tryWait(): bool
 
-    # Acquire a permit, run body, then release the permit.
-    fn withPermit(body: fn(): void): void =>
-        sn_semaphore_wait(self)
-        body()
-        sn_semaphore_post(self)
+  # Acquire a permit, run body, then release the permit.
+  fn withPermit(body: fn(): void): void =>
+    sn_semaphore_wait(self)
+    body()
+    sn_semaphore_post(self)
 
-    @alias "sn_semaphore_dispose"
-    native fn dispose(): void
+  @alias "sn_semaphore_dispose"
+  native fn dispose(): void
 
 native fn sn_semaphore_new(initial: int): Semaphore
 native fn sn_semaphore_wait(s: Semaphore): void

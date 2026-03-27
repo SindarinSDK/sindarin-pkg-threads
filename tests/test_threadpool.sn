@@ -2,59 +2,59 @@ import "../src/threadpool"
 import "../src/waitgroup"
 
 fn main(): void =>
-    # Test 1: submitted tasks all execute
-    using pool = ThreadPool.new(4) =>
-        var wg: WaitGroup = WaitGroup.new()
-        sync var counter: int = 0
+  # Test 1: submitted tasks all execute
+  using pool = ThreadPool.new(4) =>
+    var wg: WaitGroup = WaitGroup.new()
+    sync var counter: int = 0
 
-        wg.add(10)
-        var i: int = 0
-        while i < 10 =>
-            pool.submit(fn(): void =>
-                counter += 1
-                wg.done()
-            )
-            i += 1
+    wg.add(10)
+    var i: int = 0
+    while i < 10 =>
+      pool.submit(fn(): void =>
+        counter += 1
+        wg.done()
+      )
+      i += 1
 
-        wg.wait()
-        wg.dispose()
+    wg.wait()
+    wg.dispose()
 
-        if counter != 10 =>
-            print($"FAIL: expected counter=10, got {counter}\n")
-            exit(1)
+    if counter != 10 =>
+      print($"FAIL: expected counter=10, got {counter}\n")
+      exit(1)
 
-    # Test 2: pool with 1 worker serialises tasks
-    using pool2 = ThreadPool.new(1) =>
-        var wg2: WaitGroup = WaitGroup.new()
-        sync var total: int = 0
+  # Test 2: pool with 1 worker serialises tasks
+  using pool2 = ThreadPool.new(1) =>
+    var wg2: WaitGroup = WaitGroup.new()
+    sync var total: int = 0
 
-        wg2.add(5)
-        pool2.submit(fn(): void =>
-            total += 1
-            wg2.done()
-        )
-        pool2.submit(fn(): void =>
-            total += 2
-            wg2.done()
-        )
-        pool2.submit(fn(): void =>
-            total += 3
-            wg2.done()
-        )
-        pool2.submit(fn(): void =>
-            total += 4
-            wg2.done()
-        )
-        pool2.submit(fn(): void =>
-            total += 5
-            wg2.done()
-        )
+    wg2.add(5)
+    pool2.submit(fn(): void =>
+      total += 1
+      wg2.done()
+    )
+    pool2.submit(fn(): void =>
+      total += 2
+      wg2.done()
+    )
+    pool2.submit(fn(): void =>
+      total += 3
+      wg2.done()
+    )
+    pool2.submit(fn(): void =>
+      total += 4
+      wg2.done()
+    )
+    pool2.submit(fn(): void =>
+      total += 5
+      wg2.done()
+    )
 
-        wg2.wait()
-        wg2.dispose()
+    wg2.wait()
+    wg2.dispose()
 
-        if total != 15 =>
-            print($"FAIL: expected total=15, got {total}\n")
-            exit(1)
+    if total != 15 =>
+      print($"FAIL: expected total=15, got {total}\n")
+      exit(1)
 
-    print("PASS\n")
+  print("PASS\n")
