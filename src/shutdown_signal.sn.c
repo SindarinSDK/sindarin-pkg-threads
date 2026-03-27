@@ -13,6 +13,7 @@
     #endif
     #include <winsock2.h>
     #include <ws2tcpip.h>
+    #pragma comment(lib, "ws2_32.lib")
 #else
     #include <unistd.h>
     #include <fcntl.h>
@@ -70,10 +71,33 @@ static int create_signal_pair(SOCKET pair[2]) {
 #endif
 
 /* ============================================================================
+ * WinSock Initialization (Windows only)
+ * ============================================================================ */
+
+#ifdef _WIN32
+static int winsock_initialized = 0;
+
+static void ensure_winsock_initialized(void) {
+    if (!winsock_initialized) {
+        WSADATA wsaData;
+        int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (result != 0) {
+            fprintf(stderr, "WSAStartup failed: %d\n", result);
+            exit(1);
+        }
+        winsock_initialized = 1;
+    }
+}
+#else
+#define ensure_winsock_initialized() ((void)0)
+#endif
+
+/* ============================================================================
  * ShutdownSignal creation
  * ============================================================================ */
 
 RtShutdownSignal *sn_shutdown_signal_new(void) {
+    ensure_winsock_initialized();
     RtShutdownSignal *sig = __sn__ShutdownSignal__new();
     if (sig == NULL) {
         fprintf(stderr, "ShutdownSignal.new: allocation failed\n");
