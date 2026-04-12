@@ -324,3 +324,7 @@ wg.dispose()
 make test    # Build and run all tests
 make clean   # Remove build artifacts
 ```
+
+## License
+
+[MIT License](LICENSE)
